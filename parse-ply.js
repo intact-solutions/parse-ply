@@ -518,7 +518,7 @@ PLYParser.prototype.processToken = function() {
         break;
         
         default:
-          raiseError("Unexpeceted token in header");
+          this.raiseError("Unexpeceted token in header");
           return false;
       }
     break;
@@ -531,7 +531,7 @@ PLYParser.prototype.processToken = function() {
         case PLY_FORMAT.BINARY_BIG_ENDIAN:
           return this.processBinary();
         default:
-          raiseError("Invalid format, this should not happen");
+          this.raiseError("Invalid format, this should not happen");
           return false;
       }
     break;
