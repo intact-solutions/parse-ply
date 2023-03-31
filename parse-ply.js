@@ -123,34 +123,6 @@ PLYParser.prototype.getline = function(max_len) {
   return null;
 }
 
-PLYParser.prototype.getchar = function() {
-  if(this.buffers.length > 0) {
-    var v = this.buffers[0][this.offset];
-    this.offset++;
-    if(this.offset > this.buffers[0].length) {
-      this.offset = 0;
-      this.buffers.shift();
-    }
-    return v;
-  }
-  return -1;
-}
-
-//Stupid hack to make getint/getfloat work
-PLYParser.prototype.rewind = function(c) {
-  if(this.offset > 0) {
-    this.offset--;
-    return;
-  }
-  var tmp_buf = new Buffer(1);
-  tmp_buf[0] = c;
-  this.buffers.unshift(tmp_buf);
-}
-
-var data_buffer = new Uint8Array(8);
-var float_view = new Float32Array(data_buffer.buffer);
-var double_view = new Float64Array(data_buffer.buffer);
-
 PLYParser.prototype.getint = function(len) {
   const begin = this.offset;
   const end = this.offset + len;
@@ -178,7 +150,6 @@ PLYParser.prototype.getfloat = function(len) {
     return Number.NaN;
   }
 }
-
 
 PLYParser.prototype.clearBuffers = function() {
   this.offset = 0;
