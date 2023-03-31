@@ -245,6 +245,7 @@ PLYParser.prototype.processBinary = function() {
           case PLY_TYPES.INT:
             var vi = this.getint(p.size0);
             if(isNaN(vi)) {
+              this.raiseError("Invalid integer value from binary");
               return false;
             }
             p.data[idx] = vi;
@@ -253,6 +254,7 @@ PLYParser.prototype.processBinary = function() {
           case PLY_TYPES.FLOAT:
             var vf = this.getfloat(p.size0);
             if(isNaN(vf)) {
+              this.raiseError("Invalid float value from binary");
               return false;
             }
             p.data[idx] = vf;
@@ -264,6 +266,7 @@ PLYParser.prototype.processBinary = function() {
             if(this.current_list_property < 0) {
               var vi = this.getint(p.size0);
               if(isNaN(vi)) {
+                this.raiseError("Invalid integer list length from binary");
                 return false;
               }
               lst = new Array(vi);
@@ -280,6 +283,7 @@ PLYParser.prototype.processBinary = function() {
                 v = this.getfloat(p.size1);
               }
               if(isNaN(v)) {
+                this.raiseError("Invalid list value from binary");
                 return false;
               }
               lst[this.current_list_property++] = v;
