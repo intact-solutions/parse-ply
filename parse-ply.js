@@ -152,49 +152,30 @@ var float_view = new Float32Array(data_buffer.buffer);
 var double_view = new Float64Array(data_buffer.buffer);
 
 PLYParser.prototype.getint = function(len) {
-  for(var i=0; i<len; ++i) {
-    var v = this.getchar();
-    if(v < 0) {
-      while(i >= 0) {
-        this.rewind(data_buffer[i]);
-      }
-      return Number.NaN;
-    }
+  const begin = this.offset;
+  const end = this.offset + len;
+  if(this.buffers.length > 0 && this.buffers[0].length >= end) {
+    this.offset = end;
+    return new DataView(this.buffers[0].buffer).getUint8(begin);
   }
-  var r = 0;
-  if(this.format === PLY_FORMAT.BINARY_LITTLE_ENDIAN) {
-    for(var j=0; j<len; ++j) {
-      r += data_buffer[j] << (8*j);
-    }
-  } else {
-    for(var j=0; j<len; ++j) {
-      r += data_buffer[len-j-1] << (8*j);
-    }
+  else {
+    return Number.NaN;
   }
-  return r;
 }
 
 PLYParser.prototype.getfloat = function(len) {
-  for(var i=0; i<len; ++i) {
-    var v = this.getchar();
-    if(v < 0) {
-      while(i >= 0) {
-        this.rewind(data_buffer[i]);
-      }
-      return Number.NaN;
+  const begin = this.offset;
+  const end = this.offset + len;
+  if(this.buffers.length > 0 && this.buffers[0].length >= end) {
+    this.offset = end;
+    if (len===4) {
+      return new DataView(this.buffers[0].buffer).getFloat32(begin, this.format === PLY_FORMAT.BINARY_LITTLE_ENDIAN)
+    } else {
+      return new DataView(this.buffers[0].buffer).getFloat64(begin, this.format === PLY_FORMAT.BINARY_LITTLE_ENDIAN)
     }
   }
-  if(this.format !== SYSTEM_ENDIAN) {
-    for(var i=0; i<len; ++i) {
-      var t = data_buffer[i];
-      data_buffer[i] = data_buffer[len-i-1];
-      data_buffer[len-i-1] = t;
-    }
-  }
-  if(len === 4) {
-    return float_view[0];
-  } else {
-    return double_view[0];
+  else {
+    return Number.NaN;
   }
 }
 
