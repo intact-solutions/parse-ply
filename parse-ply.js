@@ -518,14 +518,13 @@ PLYParser.prototype.ondata = function(data) {
   if(data instanceof Buffer) {
     this.buffers.push(data);
   } else {
-    this.buffers.push(new Buffer(data));
+    this.buffers.push(Buffer.from(data));
   }
   while(this.processToken()) { }
 }
 
 
-var TRAIL_EOL = new Buffer(1);
-TRAIL_EOL[0] = 10;
+var TRAIL_EOL = Buffer.from([10]);
 PLYParser.prototype.onend = function() {
   this.ondata(TRAIL_EOL);
   this.clearBuffers();
