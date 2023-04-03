@@ -7,12 +7,11 @@
     "test": "test"
   },
   "dependencies": {
-    "through": "~2.3.4",
-    "is-little-endian": "~0.0.0"
+    "is-little-endian": "~0.0.0",
+    "through": "~2.3.4"
   },
-  "devDependencies": {},
   "scripts": {
-    "test": "node test/dump_ply.js < test/cube_ascii.ply"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -34,5 +33,8 @@
   "author": "Mikola Lysenko",
   "license": "MIT",
   "readmeFilename": "README.md",
-  "gitHead": "2cff5a03522d741c4a7a382ae7b8ddf1ada993e6"
+  "gitHead": "2cff5a03522d741c4a7a382ae7b8ddf1ada993e6",
+  "devDependencies": {
+    "jest": "^29.5.0"
+  }
 }

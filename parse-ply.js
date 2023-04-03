@@ -123,81 +123,33 @@ PLYParser.prototype.getline = function(max_len) {
   return null;
 }
 
-PLYParser.prototype.getchar = function() {
-  if(this.buffers.length > 0) {
-    var v = this.buffers[0][this.offset];
-    this.offset++;
-    if(this.offset > this.buffers[0].length) {
-      this.offset = 0;
-      this.buffers.shift();
-    }
-    return v;
-  }
-  return -1;
-}
-
-//Stupid hack to make getint/getfloat work
-PLYParser.prototype.rewind = function(c) {
-  if(this.offset > 0) {
-    this.offset--;
-    return;
-  }
-  var tmp_buf = new Buffer(1);
-  tmp_buf[0] = c;
-  this.buffers.unshift(tmp_buf);
-}
-
-var data_buffer = new Uint8Array(8);
-var float_view = new Float32Array(data_buffer.buffer);
-var double_view = new Float64Array(data_buffer.buffer);
-
 PLYParser.prototype.getint = function(len) {
-  for(var i=0; i<len; ++i) {
-    var v = this.getchar();
-    if(v < 0) {
-      while(i >= 0) {
-        this.rewind(data_buffer[i]);
-      }
-      return Number.NaN;
-    }
+  const begin = this.offset;
+  const end = this.offset + len;
+  if(this.buffers.length > 0 && this.buffers[0].length >= end) {
+    this.offset = end;
+    return new DataView(this.buffers[0].buffer).getUint8(begin);
   }
-  var r = 0;
-  if(this.format === PLY_FORMAT.BINARY_LITTLE_ENDIAN) {
-    for(var j=0; j<len; ++j) {
-      r += data_buffer[j] << (8*j);
-    }
-  } else {
-    for(var j=0; j<len; ++j) {
-      r += data_buffer[len-j-1] << (8*j);
-    }
+  else {
+    return Number.NaN;
   }
-  return r;
 }
 
 PLYParser.prototype.getfloat = function(len) {
-  for(var i=0; i<len; ++i) {
-    var v = this.getchar();
-    if(v < 0) {
-      while(i >= 0) {
-        this.rewind(data_buffer[i]);
-      }
-      return Number.NaN;
+  const begin = this.offset;
+  const end = this.offset + len;
+  if(this.buffers.length > 0 && this.buffers[0].length >= end) {
+    this.offset = end;
+    if (len===4) {
+      return new DataView(this.buffers[0].buffer).getFloat32(begin, this.format === PLY_FORMAT.BINARY_LITTLE_ENDIAN)
+    } else {
+      return new DataView(this.buffers[0].buffer).getFloat64(begin, this.format === PLY_FORMAT.BINARY_LITTLE_ENDIAN)
     }
   }
-  if(this.format !== SYSTEM_ENDIAN) {
-    for(var i=0; i<len; ++i) {
-      var t = data_buffer[i];
-      data_buffer[i] = data_buffer[len-i-1];
-      data_buffer[len-i-1] = t;
-    }
-  }
-  if(len === 4) {
-    return float_view[0];
-  } else {
-    return double_view[0];
+  else {
+    return Number.NaN;
   }
 }
-
 
 PLYParser.prototype.clearBuffers = function() {
   this.offset = 0;
@@ -245,6 +197,7 @@ PLYParser.prototype.processBinary = function() {
           case PLY_TYPES.INT:
             var vi = this.getint(p.size0);
             if(isNaN(vi)) {
+              this.raiseError("Invalid integer value from binary");
               return false;
             }
             p.data[idx] = vi;
@@ -253,6 +206,7 @@ PLYParser.prototype.processBinary = function() {
           case PLY_TYPES.FLOAT:
             var vf = this.getfloat(p.size0);
             if(isNaN(vf)) {
+              this.raiseError("Invalid float value from binary");
               return false;
             }
             p.data[idx] = vf;
@@ -264,6 +218,7 @@ PLYParser.prototype.processBinary = function() {
             if(this.current_list_property < 0) {
               var vi = this.getint(p.size0);
               if(isNaN(vi)) {
+                this.raiseError("Invalid integer list length from binary");
                 return false;
               }
               lst = new Array(vi);
@@ -280,6 +235,7 @@ PLYParser.prototype.processBinary = function() {
                 v = this.getfloat(p.size1);
               }
               if(isNaN(v)) {
+                this.raiseError("Invalid list value from binary");
                 return false;
               }
               lst[this.current_list_property++] = v;
@@ -291,6 +247,8 @@ PLYParser.prototype.processBinary = function() {
             this.raiseError("Uninitialized property type (this should never happen)");
             return false;
         }
+
+        this.current_property++;
       }
       
       this.current_property = 0;
