@@ -85,11 +85,15 @@ PLYParser.prototype.getline = function(max_len) {
   var n = 0;
   var prefix = null;
   while(n < max_len && cbuf < this.buffers.length) {
-    if(this.buffers[cbuf][ptr] === 10) {
+    if((this.buffers[cbuf][ptr] === 13 && this.buffers[cbuf][ptr+1] === 10) || this.buffers[cbuf][ptr] === 10) {
+      var ptr_shift = 1;
+      if(this.buffers[cbuf][ptr] === 13 && this.buffers[cbuf][ptr+1] === 10) {
+        ptr_shift = 2;
+      }
       this.current_line++;
       if(cbuf > 0) {
         prefix.push(this.buffers[cbuf].slice(0, ptr));
-        this.offset = ptr+1;
+        this.offset = ptr+ptr_shift;
         if(this.offset >= this.buffers[cbuf].length) {
           this.offset = 0;
           this.buffers.splice(0, cbuf+1);
@@ -100,7 +104,7 @@ PLYParser.prototype.getline = function(max_len) {
         return this.last_line;
       } else {
         this.last_line = this.buffers[0].slice(this.offset, ptr).toString();
-        this.offset = ptr+1;
+        this.offset = ptr+ptr_shift;
         if(this.offset >= this.buffers[cbuf].length) {
           this.offset = 0;
           this.buffers.shift();
